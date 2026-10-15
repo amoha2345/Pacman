@@ -8,6 +8,7 @@ import com.mycompany.entities.BlinkyAI;
 import com.mycompany.entities.PinkyAI;
 import com.mycompany.entities.InkyAI;
 import com.mycompany.entities.ClydeAI;
+import com.mycompany.entities.GhostStrategy;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,39 +20,38 @@ public class GamePanel extends JPanel {
     private int score = 0;
     private int lives = 3;
 
-    private Ghost blinky;
-    private Ghost pinky;
-    private Ghost inky;
-    private Ghost clyde;
+    private Ghost blinky, pinky, inky, clyde;
 
     private BlinkyAI blinkyAI;
     private PinkyAI pinkyAI;
     private InkyAI inkyAI;
     private ClydeAI clydeAI;
 
-    private Timer pacmanTimer;
-    private Timer ghostTimer;
-    private Timer pinkyTimer;
-    private Timer inkyTimer;
-    private Timer clydeTimer;
-
-    private Timer pinkyReleaseTimer;
-    private Timer inkyReleaseTimer;
-    private Timer clydeReleaseTimer;
+    private Timer pacmanTimer, ghostTimer, pinkyTimer, inkyTimer, clydeTimer;
+    private Timer pinkyReleaseTimer, inkyReleaseTimer, clydeReleaseTimer;
+    private Timer mouthTimer;
 
     private boolean pinkyReleased = false;
     private boolean inkyReleased = false;
     private boolean clydeReleased = false;
 
+    private boolean pinkyExited = false;
+    private boolean inkyExited = false;
+    private boolean clydeExited = false;
+
     private boolean gameOver = false;
+    private boolean mouthOpen = true;
+    private boolean pacmanBlinking = false;
+    private boolean pacmanVisible = true;
+
+    // The tile outside the ghost house.
+    private final int exitX = 9;
+    private final int exitY = 9;
 
     public GamePanel() {
-
         maze = new Maze();
         pacman = new Pacman(1, 1);
 
-        // Blinky starts outside the ghost house.
-        // The other three ghosts start side by side inside it.
         blinky = new Ghost(9, 4, Color.RED);
         pinky = new Ghost(8, 6, Color.PINK);
         inky = new Ghost(9, 6, Color.CYAN);
@@ -69,6 +69,15 @@ public class GamePanel extends JPanel {
         setupKeyBindings();
 
         pacmanTimer = new Timer(150, e -> movePacman());
+
+        mouthTimer = new Timer(120, e -> {
+            if (!pacmanBlinking && !gameOver) {
+                mouthOpen = !mouthOpen;
+                repaint();
+            }
+        });
+        mouthTimer.start();
+
         ghostTimer = new Timer(300, e -> moveBlinky());
         pinkyTimer = new Timer(400, e -> movePinky());
         inkyTimer = new Timer(350, e -> moveInky());
@@ -90,6 +99,7 @@ public class GamePanel extends JPanel {
         pinkyReleaseTimer = new Timer(10000, e -> {
             pinkyReleased = true;
             pinkyReleaseTimer.stop();
+            repaint();
         });
         pinkyReleaseTimer.setRepeats(false);
         pinkyReleaseTimer.start();
@@ -99,6 +109,7 @@ public class GamePanel extends JPanel {
         inkyReleaseTimer = new Timer(20000, e -> {
             inkyReleased = true;
             inkyReleaseTimer.stop();
+            repaint();
         });
         inkyReleaseTimer.setRepeats(false);
         inkyReleaseTimer.start();
@@ -108,6 +119,7 @@ public class GamePanel extends JPanel {
         clydeReleaseTimer = new Timer(30000, e -> {
             clydeReleased = true;
             clydeReleaseTimer.stop();
+            repaint();
         });
         clydeReleaseTimer.setRepeats(false);
         clydeReleaseTimer.start();
@@ -127,167 +139,208 @@ public class GamePanel extends JPanel {
         getActionMap().put(name, new AbstractAction() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
-                if (!gameOver) {
+                if (!gameOver && !pacmanBlinking) {
                     pacman.setDirection(dx, dy);
                 }
             }
         });
     }
 
-private void movePacman() {
-    if (gameOver) {
-        return;
-    }
+    private void movePacman() {
+        if (gameOver || pacmanBlinking) return;
 
-    // Move Pac-Man and award points if he collects a dot.
-    if (pacman.move(maze)) {
-        score += 10;
-    }
+        if (pacman.move(maze)) {
+            score += 10;
+        }
 
-    checkCollision();
+        checkCollision();
 
-    if (gameOver) {
-        return;
-    }
+        if (gameOver || pacmanBlinking) return;
 
-    // Check whether all dots have been collected.
-    if (!maze.hasDotsLeft()) {
-        gameOver = true;
-        stopTimers();
-        JOptionPane.showMessageDialog(this, "YOU WIN!");
-        closeGame();
-        return;
-    }
-
-    repaint();
-}
-
-
-    private void moveBlinky() {
-        if (gameOver) {
+        if (!maze.hasDotsLeft()) {
+            gameOver = true;
+            stopTimers();
+            JOptionPane.showMessageDialog(this, "YOU WIN!");
+            closeGame();
             return;
         }
 
-        int[] move = blinkyAI.getNextMove(blinky, pacman, maze);
-        blinky.moveTo(
-                blinky.getX() + move[0],
-                blinky.getY() + move[1]
-        );
-
-        checkCollision();
         repaint();
+    }
+
+    private void moveBlinky() {
+        if (gameOver || pacmanBlinking) return;
+        moveUsingAI(blinky, blinkyAI);
     }
 
     private void movePinky() {
-        if (gameOver || !pinkyReleased) {
+        if (gameOver || pacmanBlinking || !pinkyReleased) return;
+
+        if (!pinkyExited) {
+            pinkyExited = moveTowardExit(pinky);
+            checkCollision();
+            repaint();
             return;
         }
 
-        int[] move = pinkyAI.getNextMove(pinky, pacman, maze);
-        pinky.moveTo(
-                pinky.getX() + move[0],
-                pinky.getY() + move[1]
-        );
-
-        checkCollision();
-        repaint();
+        moveUsingAI(pinky, pinkyAI);
     }
 
     private void moveInky() {
-        if (gameOver || !inkyReleased) {
+        if (gameOver || pacmanBlinking || !inkyReleased) return;
+
+        if (!inkyExited) {
+            inkyExited = moveTowardExit(inky);
+            checkCollision();
+            repaint();
             return;
         }
 
-        int[] move = inkyAI.getNextMove(inky, pacman, maze);
-        inky.moveTo(
-                inky.getX() + move[0],
-                inky.getY() + move[1]
-        );
-
-        checkCollision();
-        repaint();
+        moveUsingAI(inky, inkyAI);
     }
 
     private void moveClyde() {
-        if (gameOver || !clydeReleased) {
+        if (gameOver || pacmanBlinking || !clydeReleased) return;
+
+        if (!clydeExited) {
+            clydeExited = moveTowardExit(clyde);
+            checkCollision();
+            repaint();
             return;
         }
 
-        int[] move = clydeAI.getNextMove(clyde, pacman, maze);
-        clyde.moveTo(
-                clyde.getX() + move[0],
-                clyde.getY() + move[1]
-        );
+        moveUsingAI(clyde, clydeAI);
+    }
+
+    // Move to the centre column, then down through the door.
+    private boolean moveTowardExit(Ghost ghost) {
+        int x = ghost.getX();
+        int y = ghost.getY();
+
+        if (x == exitX && y == exitY) {
+            return true;
+        }
+
+        int nextX = x;
+        int nextY = y;
+
+        if (x < exitX) {
+            nextX++;
+        } else if (x > exitX) {
+            nextX--;
+        } else if (y < exitY) {
+            nextY++;
+        }
+
+        if (!maze.isWall(nextX, nextY) || maze.isDoor(nextX, nextY)) {
+            ghost.moveTo(nextX, nextY);
+        }
+
+        return ghost.getX() == exitX && ghost.getY() == exitY;
+    }
+
+    private void moveUsingAI(Ghost ghost, GhostStrategy ai) {
+        int[] move = ai.getNextMove(ghost, pacman, maze);
+
+        if (move == null || move.length < 2) return;
+
+        int nextX = ghost.getX() + move[0];
+        int nextY = ghost.getY() + move[1];
+
+        if (move[0] != 0 || move[1] != 0) {
+            if (nextX >= 0 && nextX < maze.getCols()
+                    && nextY >= 0 && nextY < maze.getRows()
+                    && (!maze.isWall(nextX, nextY)
+                    || maze.isDoor(nextX, nextY))) {
+                ghost.moveTo(nextX, nextY);
+            }
+        }
 
         checkCollision();
         repaint();
     }
 
     private void checkCollision() {
-        if (gameOver) {
-            return;
-        }
+        if (gameOver || pacmanBlinking) return;
 
-        boolean blinkyHit =
-                blinky.getX() == pacman.getX()
-                && blinky.getY() == pacman.getY();
-
-        boolean pinkyHit = pinkyReleased
+        boolean hit =
+                (blinky.getX() == pacman.getX()
+                && blinky.getY() == pacman.getY())
+                || (pinkyReleased
                 && pinky.getX() == pacman.getX()
-                && pinky.getY() == pacman.getY();
-
-        boolean inkyHit = inkyReleased
+                && pinky.getY() == pacman.getY())
+                || (inkyReleased
                 && inky.getX() == pacman.getX()
-                && inky.getY() == pacman.getY();
-
-        boolean clydeHit = clydeReleased
+                && inky.getY() == pacman.getY())
+                || (clydeReleased
                 && clyde.getX() == pacman.getX()
-                && clyde.getY() == pacman.getY();
+                && clyde.getY() == pacman.getY());
 
-        if (!blinkyHit && !pinkyHit && !inkyHit && !clydeHit) {
-            return;
-        }
+        if (!hit) return;
 
         stopTimers();
         lives--;
 
         if (lives <= 0) {
             gameOver = true;
+            pacmanVisible = true;
             repaint();
             JOptionPane.showMessageDialog(this, "GAME OVER!");
             closeGame();
             return;
         }
 
-        // Reset positions after Pac-Man loses a life.
-        pacman = new Pacman(1, 1);
+        pacmanBlinking = true;
+        pacmanVisible = false;
 
-        blinky.moveTo(9, 4);
-        pinky.moveTo(8, 6);
-        inky.moveTo(9, 6);
-        clyde.moveTo(10, 6);
+        Timer blinkTimer = new Timer(150, e -> {
+            pacmanVisible = !pacmanVisible;
+            repaint();
+        });
+        blinkTimer.start();
 
-        pinkyReleased = false;
-        inkyReleased = false;
-        clydeReleased = false;
+        Timer pauseTimer = new Timer(1200, e -> {
+            blinkTimer.stop();
 
-        repaint();
+            pacmanBlinking = false;
+            pacmanVisible = true;
+            pacman = new Pacman(1, 1);
 
-        JOptionPane.showMessageDialog(
-                this, "You were caught! Lives left: " + lives
-        );
+            blinky.moveTo(9, 4);
+            pinky.moveTo(8, 6);
+            inky.moveTo(9, 6);
+            clyde.moveTo(10, 6);
 
-        if (!gameOver) {
-            pacmanTimer.start();
-            ghostTimer.start();
-            pinkyTimer.start();
-            inkyTimer.start();
-            clydeTimer.start();
+            pinkyReleased = false;
+            inkyReleased = false;
+            clydeReleased = false;
 
-            startPinkyReleaseTimer();
-            startInkyReleaseTimer();
-            startClydeReleaseTimer();
-        }
+            pinkyExited = false;
+            inkyExited = false;
+            clydeExited = false;
+
+            repaint();
+
+            JOptionPane.showMessageDialog(
+                    this, "You were caught! Lives left: " + lives
+            );
+
+            if (!gameOver) {
+                mouthTimer.start();
+                pacmanTimer.start();
+                ghostTimer.start();
+                pinkyTimer.start();
+                inkyTimer.start();
+                clydeTimer.start();
+
+                startPinkyReleaseTimer();
+                startInkyReleaseTimer();
+                startClydeReleaseTimer();
+            }
+        });
+
+        pauseTimer.setRepeats(false);
+        pauseTimer.start();
     }
 
     private void stopTimers() {
@@ -296,6 +349,7 @@ private void movePacman() {
         if (pinkyTimer != null) pinkyTimer.stop();
         if (inkyTimer != null) inkyTimer.stop();
         if (clydeTimer != null) clydeTimer.stop();
+        if (mouthTimer != null) mouthTimer.stop();
 
         if (pinkyReleaseTimer != null) pinkyReleaseTimer.stop();
         if (inkyReleaseTimer != null) inkyReleaseTimer.stop();
@@ -304,9 +358,7 @@ private void movePacman() {
 
     private void closeGame() {
         Window window = SwingUtilities.getWindowAncestor(this);
-        if (window != null) {
-            window.dispose();
-        }
+        if (window != null) window.dispose();
     }
 
     @Override
@@ -321,7 +373,6 @@ private void movePacman() {
                 int py = y * tileSize;
 
                 if (maze.isDoor(x, y)) {
-                    // Ghost-only door.
                     g.setColor(Color.PINK);
                     g.fillRect(px, py + 8, tileSize, 14);
                 } else if (maze.isWall(x, y)) {
@@ -334,21 +385,30 @@ private void movePacman() {
             }
         }
 
-        // Pac-Man
-        g.setColor(Color.YELLOW);
-        g.fillOval(
-                pacman.getX() * tileSize + 3,
-                pacman.getY() * tileSize + 3,
-                24, 24
-        );
-
-        // Ghosts
         drawGhost(g, blinky, tileSize);
         drawGhost(g, pinky, tileSize);
         drawGhost(g, inky, tileSize);
         drawGhost(g, clyde, tileSize);
 
-        // Score and lives
+        if (pacmanVisible) {
+            g.setColor(Color.YELLOW);
+
+            int px = pacman.getX() * tileSize + 3;
+            int py = pacman.getY() * tileSize + 3;
+
+            int angle = 0;
+
+            if (pacman.getDx() == -1) angle = 180;
+            else if (pacman.getDy() == -1) angle = 90;
+            else if (pacman.getDy() == 1) angle = 270;
+
+            if (mouthOpen) {
+                g.fillArc(px, py, 24, 24, angle + 35, 290);
+            } else {
+                g.fillOval(px, py, 24, 24);
+            }
+        }
+
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 20));
         g.drawString("Score: " + score, 10, 445);
