@@ -15,11 +15,9 @@ public class ClydeAI implements GhostStrategy {
         int targetY;
 
         if (distance > 6) {
-            // Far away: chase Pac-Man.
             targetX = pacman.getX();
             targetY = pacman.getY();
         } else {
-            // Nearby: retreat to the bottom-left corner.
             targetX = 1;
             targetY = maze.getRows() - 2;
         }

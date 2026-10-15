@@ -8,7 +8,6 @@ public class InkyAI implements GhostStrategy {
     @Override
     public int[] getNextMove(Ghost ghost, Pacman pacman, Maze maze) {
 
-        // Target two tiles ahead of Pac-Man.
         int targetX = pacman.getX() + 2 * pacman.getDx();
         int targetY = pacman.getY() + 2 * pacman.getDy();
 

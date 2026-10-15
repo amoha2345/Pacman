@@ -13,7 +13,6 @@ public class PinkyAI implements GhostStrategy {
         int cols = maze.getCols();
         int rows = maze.getRows();
 
-        // Target four tiles ahead of Pac-Man.
         int targetX = pacman.getX() + 4 * pacman.getDx();
         int targetY = pacman.getY() + 4 * pacman.getDy();
 
