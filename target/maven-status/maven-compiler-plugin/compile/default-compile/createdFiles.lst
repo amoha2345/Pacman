@@ -1,3 +1,5 @@
+com\mycompany\gui\GameRenderer.class
+com\mycompany\gui\GhostManager.class
 com\mycompany\entities\BlinkyAI.class
 com\mycompany\gui\GameFrame.class
 com\mycompany\util\Maze.class
