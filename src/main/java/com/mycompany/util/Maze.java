@@ -1,9 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-package com.mycompany.util;
 
+package com.mycompany.util;
 
 public class Maze {
 
@@ -13,10 +9,10 @@ public class Maze {
         "#.###...#...###...#".toCharArray(),
         "#.................#".toCharArray(),
         "#...##.....##.....#".toCharArray(),
-        "#.................#".toCharArray(),
-        "#.###...#...###...#".toCharArray(),
-        "#.................#".toCharArray(),
-        "#...##.....##.....#".toCharArray(),
+        "#......#####......#".toCharArray(),
+        "#......#...#......#".toCharArray(),
+        "#......#...#......#".toCharArray(),
+        "#......##D##......#".toCharArray(),
         "#.................#".toCharArray(),
         "#.###...#...###...#".toCharArray(),
         "#.................#".toCharArray(),
@@ -27,6 +23,15 @@ public class Maze {
 
     public boolean isWall(int x, int y) {
         return layout[y][x] == '#';
+    }
+
+    // Pac-Man cannot pass through the ghost door.
+    public boolean isWallForPacman(int x, int y) {
+        return layout[y][x] == '#' || layout[y][x] == 'D';
+    }
+
+    public boolean isDoor(int x, int y) {
+        return layout[y][x] == 'D';
     }
 
     public boolean hasDot(int x, int y) {
@@ -50,14 +55,15 @@ public class Maze {
     public int getCols() {
         return layout[0].length;
     }
+
     public boolean hasDotsLeft() {
-    for (int y = 0; y < layout.length; y++) {
-        for (int x = 0; x < layout[y].length; x++) {
-            if (layout[y][x] == '.') {
-                return true;
+        for (int y = 0; y < layout.length; y++) {
+            for (int x = 0; x < layout[y].length; x++) {
+                if (layout[y][x] == '.') {
+                    return true;
+                }
             }
         }
+        return false;
     }
-    return false;
-}
 }

@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 
 package com.mycompany.entities;
 
@@ -12,23 +8,52 @@ public class Pacman {
     private int x;
     private int y;
 
+    private int dx = 0;
+    private int dy = 0;
+
+    private int nextDx = 0;
+    private int nextDy = 0;
+
     public Pacman(int startX, int startY) {
         x = startX;
         y = startY;
     }
 
-    public void move(int dx, int dy, Maze maze) {
-        int newX = x + dx;
-        int newY = y + dy;
+    public boolean move(Maze maze) {
 
-        if (newX >= 0 && newX < maze.getCols()
-                && newY >= 0 && newY < maze.getRows()
-                && !maze.isWall(newX, newY)) {
+        // Try to turn in the requested direction.
+        int newX = x + nextDx;
+        int newY = y + nextDy;
 
-            x = newX;
-            y = newY;
-            maze.collectDot(x, y);
+        if ((nextDx != 0 || nextDy != 0)
+                && canMove(newX, newY, maze)) {
+            dx = nextDx;
+            dy = nextDy;
         }
+
+        // Continue moving in the current direction.
+        newX = x + dx;
+        newY = y + dy;
+
+        if (!canMove(newX, newY, maze)) {
+            return false;
+        }
+
+        // Check whether the next tile contains a dot.
+        boolean collectedDot = maze.hasDot(newX, newY);
+
+        x = newX;
+        y = newY;
+
+        maze.collectDot(x, y);
+
+        return collectedDot;
+    }
+
+    private boolean canMove(int newX, int newY, Maze maze) {
+        return newX >= 0 && newX < maze.getCols()
+                && newY >= 0 && newY < maze.getRows()
+                && !maze.isWallForPacman(newX, newY);
     }
 
     public int getX() {
@@ -37,5 +62,18 @@ public class Pacman {
 
     public int getY() {
         return y;
+    }
+
+    public int getDx() {
+        return dx;
+    }
+
+    public int getDy() {
+        return dy;
+    }
+
+    public void setDirection(int dx, int dy) {
+        nextDx = dx;
+        nextDy = dy;
     }
 }

@@ -1,10 +1,13 @@
-com\mycompany\gui\GamePanel.class
 com\mycompany\entities\BlinkyAI.class
 com\mycompany\gui\GameFrame.class
-GamePanel\java.class
 com\mycompany\util\Maze.class
+com\mycompany\entities\ClydeAI.class
+com\mycompany\gui\Main.class
+com\mycompany\gui\GamePanel.class
+com\mycompany\entities\InkyAI.class
+GamePanel\java.class
+com\mycompany\entities\PinkyAI.class
 com\mycompany\entities\Ghost.class
 com\mycompany\entities\GhostStrategy.class
 com\mycompany\entities\Pacman.class
 com\mycompany\gui\GamePanel$1.class
-com\mycompany\gui\Main.class
