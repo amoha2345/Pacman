@@ -12,6 +12,10 @@ import com.mycompany.entities.GhostStrategy;
 import javax.swing.Timer;
 import java.awt.Color;
 
+/**
+ * Manages the lifecycle, timers, house-release schedules, 
+ * and movement updates for all four ghost entities.
+ */
 public class GhostManager {
 
     private final Maze maze;
@@ -24,8 +28,10 @@ public class GhostManager {
     private final InkyAI inkyAI = new InkyAI();
     private final ClydeAI clydeAI = new ClydeAI();
 
+    // Movement speed timers for each individual ghost
     private final Timer ghostTimer, pinkyTimer, inkyTimer, clydeTimer;
 
+    // Countdown timers to release ghosts from the central house
     private Timer pinkyReleaseTimer, inkyReleaseTimer, clydeReleaseTimer;
 
     private boolean pinkyReleased = false;
@@ -41,9 +47,19 @@ public class GhostManager {
     private final Runnable collisionCheck;
     private final Runnable repaintAction;
 
+    // Target coordinate representing the ghost house exit doorway
     private final int exitX = 9;
     private final int exitY = 9;
 
+    /**
+     * Constructs the GhostManager, instantiates the four ghosts, 
+     * and sets up their individual movement timers and callbacks.
+     *
+     * @param maze the maze grid containing walls and doors
+     * @param pacman the target Pacman entity
+     * @param collisionCheck callback executed after each ghost step to test for collisions
+     * @param repaintAction callback executed after each ghost step to refresh the display
+     */
     public GhostManager(Maze maze, Pacman pacman,
             Runnable collisionCheck, Runnable repaintAction) {
 
@@ -57,12 +73,16 @@ public class GhostManager {
         inky = new Ghost(9, 6, Color.CYAN);
         clyde = new Ghost(10, 6, Color.ORANGE);
 
+        // Different update rates (speeds) for each ghost
         ghostTimer = new Timer(300, e -> moveUsingAI(blinky, blinkyAI));
         pinkyTimer = new Timer(400, e -> movePinky());
         inkyTimer = new Timer(350, e -> moveInky());
         clydeTimer = new Timer(400, e -> moveClyde());
     }
 
+    /**
+     * Starts all ghost movement timers and initiates the release countdowns.
+     */
     public void start() {
         paused = false;
 
@@ -74,6 +94,9 @@ public class GhostManager {
         startReleaseTimers();
     }
 
+    /**
+     * Pauses and stops all movement and release timers.
+     */
     public void stop() {
         paused = true;
 
@@ -87,8 +110,11 @@ public class GhostManager {
         if (clydeReleaseTimer != null) clydeReleaseTimer.stop();
     }
 
+    /**
+     * Starts one-shot countdown timers to release ghosts from the central house
+     * in staggered intervals (Pinky at 10s, Inky at 20s, Clyde at 30s).
+     */
     private void startReleaseTimers() {
-        // Do not restart release timers for ghosts already released.
         if (!pinkyReleased) {
             pinkyReleaseTimer = new Timer(10000, e -> {
                 pinkyReleased = true;
@@ -117,6 +143,10 @@ public class GhostManager {
         }
     }
 
+    /**
+     * Handles Pinky's movement: navigates toward the exit first, 
+     * then switches to PinkyAI once outside.
+     */
     private void movePinky() {
         if (paused || !pinkyReleased) return;
 
@@ -130,6 +160,10 @@ public class GhostManager {
         moveUsingAI(pinky, pinkyAI);
     }
 
+    /**
+     * Handles Inky's movement: navigates toward the exit first, 
+     * then switches to InkyAI once outside.
+     */
     private void moveInky() {
         if (paused || !inkyReleased) return;
 
@@ -143,6 +177,10 @@ public class GhostManager {
         moveUsingAI(inky, inkyAI);
     }
 
+    /**
+     * Handles Clyde's movement: navigates toward the exit first, 
+     * then switches to ClydeAI once outside.
+     */
     private void moveClyde() {
         if (paused || !clydeReleased) return;
 
@@ -156,6 +194,12 @@ public class GhostManager {
         moveUsingAI(clyde, clydeAI);
     }
 
+    /**
+     * Steps a ghost entity incrementally toward the house exit door.
+     *
+     * @param ghost the ghost navigating out of the house
+     * @return true if the ghost has reached the exit tile, false otherwise
+     */
     private boolean moveTowardExit(Ghost ghost) {
         int x = ghost.getX();
         int y = ghost.getY();
@@ -182,6 +226,13 @@ public class GhostManager {
         return ghost.getX() == exitX && ghost.getY() == exitY;
     }
 
+    /**
+     * Queries a ghost's AI strategy, validates the returned step against boundaries and walls,
+     * updates the ghost's position, and executes collision/repaint callbacks.
+     *
+     * @param ghost the ghost entity to move
+     * @param ai the AI strategy determining the direction
+     */
     private void moveUsingAI(Ghost ghost, GhostStrategy ai) {
         if (paused) return;
 
@@ -206,6 +257,10 @@ public class GhostManager {
         repaintAction.run();
     }
 
+    /**
+     * Resets all ghosts to their original starting coordinates,
+     * relocks the ghost house doors, and resets release states.
+     */
     public void resetPositions() {
         blinky.moveTo(9, 4);
         pinky.moveTo(8, 6);
@@ -221,6 +276,11 @@ public class GhostManager {
         clydeExited = false;
     }
 
+    /**
+     * Updates the reference to the active Pacman entity (used after a respawn).
+     *
+     * @param pacman the new Pacman instance
+     */
     public void setPacman(Pacman pacman) {
         this.pacman = pacman;
     }

@@ -8,9 +8,29 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
-
+/**
+ * Handles all graphical rendering for the Pac-Man game.
+ * Responsible for drawing the maze, entities, HUD (score and lives), and the pause overlay.
+ */
 public class GameRenderer {
-
+/**
+     * Renders the complete game state onto the screen.
+     * Draws the maze tiles, all ghosts, Pacman (with direction and mouth animation),
+     * HUD elements, and the semi-transparent pause overlay when the game is paused.
+     *
+     * @param g the Graphics context used for drawing
+     * @param maze the maze grid containing walls, doors, and dots
+     * @param pacman the player entity
+     * @param blinky the red ghost
+     * @param pinky the pink ghost
+     * @param inky the cyan ghost
+     * @param clyde the orange ghost
+     * @param score the current player score
+     * @param lives the number of remaining lives
+     * @param mouthOpen true if Pacman's mouth is rendered open, false if closed
+     * @param pacmanVisible true if Pacman is visible, false during blinking animation
+     * @param paused true if the pause overlay should be displayed, false otherwise
+     */
     public void draw(Graphics g, Maze maze, Pacman pacman,
             Ghost blinky, Ghost pinky, Ghost inky, Ghost clyde,
             int score, int lives, boolean mouthOpen,
@@ -99,7 +119,14 @@ public class GameRenderer {
             g.drawString(subText, subX, titleY + 35);
         }
     }
-
+/**
+     * Helper method to render an individual ghost entity.
+     * Draws the dome head, rectangular body, wavy polygon skirt, and eyes.
+     *
+     * @param g the Graphics context used for drawing
+     * @param ghost the ghost entity to render
+     * @param tileSize the size of a grid tile in pixels
+     */
     private void drawGhost(Graphics g, Ghost ghost, int tileSize) {
         int x = ghost.getX() * tileSize;
         int y = ghost.getY() * tileSize;

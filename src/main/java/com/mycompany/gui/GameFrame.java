@@ -5,7 +5,10 @@ import javax.swing.*;
 import java.awt.*;
 
 public class GameFrame extends JFrame {
-
+/**
+     * Constructs the main game window and initializes window properties.
+     * Sets the default close operation, disables resizing, and displays the start screen.
+     */
     public GameFrame() {
         setTitle("PACMAN");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -16,7 +19,13 @@ public class GameFrame extends JFrame {
         pack();
         setLocationRelativeTo(null);
     }
-
+/**
+     * Creates and returns the initial start screen panel.
+     * Contains the title label, spacing, and the Start Game button 
+     * which transitions the window into the active gameplay panel.
+     *
+     * @return the JPanel representing the start screen
+     */
     public JPanel createStartScreen() {
         JPanel panel = new JPanel();
         panel.setBackground(new Color(8, 8, 25));

@@ -6,7 +6,10 @@ import com.mycompany.entities.Ghost;
 
 import javax.swing.*;
 import java.awt.*;
-
+/**
+ * Main gameplay panel for the Pac-Man game.
+ * Manages game state, user input, timers, collision detection, and rendering.
+ */
 public class GamePanel extends JPanel {
 
     private Maze maze;
@@ -26,6 +29,10 @@ public class GamePanel extends JPanel {
     private boolean pacmanBlinking = false;
     private boolean pacmanVisible = true;
     private boolean paused = false; // Track pause state
+     /**
+     * Constructs the GamePanel, initializes the maze, Pacman, ghosts,
+     * key bindings, and starts the gameplay timers.
+     */
 
     public GamePanel() {
         maze = new Maze();
@@ -54,7 +61,9 @@ public class GamePanel extends JPanel {
         ghostManager.start();
         pacmanTimer.start();
     }
-
+/**
+     * Sets up keyboard bindings for arrow movement and pause keys (P and SPACE).
+     */
     private void setupKeyBindings() {
         bindMove("UP", "moveUp", 0, -1);
         bindMove("DOWN", "moveDown", 0, 1);
@@ -65,7 +74,14 @@ public class GamePanel extends JPanel {
         bindPause("P", "pauseKeyP");
         bindPause("SPACE", "pauseKeySpace");
     }
-
+/**
+     * Binds a directional key stroke to Pacman's movement direction.
+     *
+     * @param key the keyboard key name (e.g., "UP", "DOWN")
+     * @param name unique identifier for the action map
+     * @param dx horizontal direction delta (-1 for left, 1 for right, 0 for none)
+     * @param dy vertical direction delta (-1 for up, 1 for down, 0 for none)
+     */
     private void bindMove(String key, String name, int dx, int dy) {
         getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                 .put(KeyStroke.getKeyStroke(key), name);
@@ -80,7 +96,12 @@ public class GamePanel extends JPanel {
             }
         });
     }
-
+ /**
+     * Binds a key stroke to the pause/resume functionality.
+     *
+     * @param key the keyboard key name (e.g., "P", "SPACE")
+     * @param name unique identifier for the pause action
+     */
     private void bindPause(String key, String name) {
         getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                 .put(KeyStroke.getKeyStroke(key), name);
@@ -92,7 +113,10 @@ public class GamePanel extends JPanel {
             }
         });
     }
-
+/**
+     * Toggles the paused state of the game.
+     * Freezes gameplay timers when paused and resumes them when unpaused.
+     */
     private void togglePause() {
         if (gameOver || pacmanBlinking) return;
 
@@ -108,7 +132,10 @@ public class GamePanel extends JPanel {
 
         repaint();
     }
-
+/**
+     * Moves Pacman in his current direction, updates the score if a dot is eaten,
+     * triggers collision checks, and verifies win conditions.
+     */
     private void movePacman() {
         if (gameOver || pacmanBlinking || paused) return;
 
@@ -130,7 +157,10 @@ public class GamePanel extends JPanel {
 
         repaint();
     }
-
+/**
+     * Checks if Pacman collides with any released ghost.
+     * Decreases lives, triggers the blink animation, or ends the game if lives reach zero.
+     */
     private void checkCollision() {
         if (gameOver || pacmanBlinking || paused || ghostManager == null) return;
 
@@ -195,12 +225,19 @@ public class GamePanel extends JPanel {
         pauseTimer.setRepeats(false);
         pauseTimer.start();
     }
-
+/**
+     * Checks whether a ghost occupies the exact same tile as Pacman.
+     *
+     * @param ghost the ghost entity to check against Pacman
+     * @return true if both occupy the same (x, y) coordinates, false otherwise
+     */
     private boolean samePosition(Ghost ghost) {
         return ghost.getX() == pacman.getX()
                 && ghost.getY() == pacman.getY();
     }
-
+/**
+     * Stops all active gameplay timers (Pacman, mouth animation, and ghosts).
+     */
     private void stopTimers() {
         if (pacmanTimer != null) pacmanTimer.stop();
         if (mouthTimer != null) mouthTimer.stop();
@@ -209,14 +246,20 @@ public class GamePanel extends JPanel {
             ghostManager.stop();
         }
     }
-
+ /**
+     * Disposes and closes the parent window when the game finishes.
+     */
     private void closeGame() {
         Window window = SwingUtilities.getWindowAncestor(this);
         if (window != null) {
             window.dispose();
         }
     }
-
+/**
+     * Paints the game screen components including the maze, entities, and UI overlay.
+     *
+     * @param g the Graphics context used for drawing
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
