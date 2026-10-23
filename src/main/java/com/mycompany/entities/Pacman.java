@@ -31,6 +31,11 @@ public class Pacman {
             dy = nextDy;
         }
 
+        // If Pac-Man has no direction, it cannot move.
+        if (dx == 0 && dy == 0) {
+            return false;
+        }
+
         // Continue moving in the current direction.
         newX = x + dx;
         newY = y + dy;

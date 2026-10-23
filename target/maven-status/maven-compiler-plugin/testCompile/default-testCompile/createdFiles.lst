@@ -1,5 +1,7 @@
-com\mycompany\entities\InkyAITest.class
 com\mycompany\util\MazeTest.class
 com\mycompany\entities\ClydeAITest.class
+com\mycompany\entities\PacmanTest.class
+com\mycompany\entities\InkyAITest.class
 com\mycompany\entities\BlinkyAITest.class
 com\mycompany\entities\PinkyAITest.class
+com\mycompany\gui\GhostManagerTest.class
