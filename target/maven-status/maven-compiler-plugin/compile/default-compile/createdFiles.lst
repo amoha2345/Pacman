@@ -1,4 +1,5 @@
 com\mycompany\gui\GameRenderer.class
+com\mycompany\gui\GamePanel$2.class
 com\mycompany\gui\GhostManager.class
 com\mycompany\entities\BlinkyAI.class
 com\mycompany\gui\GameFrame.class

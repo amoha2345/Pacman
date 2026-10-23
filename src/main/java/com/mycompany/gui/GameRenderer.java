@@ -6,6 +6,7 @@ import com.mycompany.entities.Pacman;
 import com.mycompany.entities.Ghost;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 
 public class GameRenderer {
@@ -13,7 +14,7 @@ public class GameRenderer {
     public void draw(Graphics g, Maze maze, Pacman pacman,
             Ghost blinky, Ghost pinky, Ghost inky, Ghost clyde,
             int score, int lives, boolean mouthOpen,
-            boolean pacmanVisible) {
+            boolean pacmanVisible, boolean paused) {
 
         int tileSize = 30;
 
@@ -70,6 +71,33 @@ public class GameRenderer {
         g.setFont(new Font("Arial", Font.BOLD, 20));
         g.drawString("Score: " + score, 10, 445);
         g.drawString("Lives: " + lives, 150, 445);
+
+        // Draw PAUSED overlay
+        if (paused) {
+            int panelWidth = maze.getCols() * tileSize;
+            int panelHeight = 450;
+
+            // Semi-transparent dark background
+            g.setColor(new Color(0, 0, 0, 175));
+            g.fillRect(0, 0, panelWidth, panelHeight);
+
+            // Title "PAUSED"
+            g.setColor(Color.YELLOW);
+            g.setFont(new Font("Arial", Font.BOLD, 36));
+            FontMetrics fm = g.getFontMetrics();
+            String pauseText = "PAUSED";
+            int titleX = (panelWidth - fm.stringWidth(pauseText)) / 2;
+            int titleY = panelHeight / 2 - 10;
+            g.drawString(pauseText, titleX, titleY);
+
+            // Hint
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.PLAIN, 16));
+            FontMetrics subFm = g.getFontMetrics();
+            String subText = "Press 'P' or 'SPACE' to Resume";
+            int subX = (panelWidth - subFm.stringWidth(subText)) / 2;
+            g.drawString(subText, subX, titleY + 35);
+        }
     }
 
     private void drawGhost(Graphics g, Ghost ghost, int tileSize) {

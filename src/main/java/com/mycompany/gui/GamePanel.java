@@ -1,4 +1,3 @@
-
 package com.mycompany.gui;
 
 import com.mycompany.util.Maze;
@@ -26,6 +25,7 @@ public class GamePanel extends JPanel {
     private boolean mouthOpen = true;
     private boolean pacmanBlinking = false;
     private boolean pacmanVisible = true;
+    private boolean paused = false; // Track pause state
 
     public GamePanel() {
         maze = new Maze();
@@ -44,7 +44,7 @@ public class GamePanel extends JPanel {
         pacmanTimer = new Timer(150, e -> movePacman());
 
         mouthTimer = new Timer(120, e -> {
-            if (!pacmanBlinking && !gameOver) {
+            if (!pacmanBlinking && !gameOver && !paused) {
                 mouthOpen = !mouthOpen;
                 repaint();
             }
@@ -60,6 +60,10 @@ public class GamePanel extends JPanel {
         bindMove("DOWN", "moveDown", 0, 1);
         bindMove("LEFT", "moveLeft", -1, 0);
         bindMove("RIGHT", "moveRight", 1, 0);
+
+        // Bind 'P' and 'SPACE' to pause/resume
+        bindPause("P", "pauseKeyP");
+        bindPause("SPACE", "pauseKeySpace");
     }
 
     private void bindMove(String key, String name, int dx, int dy) {
@@ -69,15 +73,44 @@ public class GamePanel extends JPanel {
         getActionMap().put(name, new AbstractAction() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
-                if (!gameOver && !pacmanBlinking) {
+                // Ignore input while paused
+                if (!gameOver && !pacmanBlinking && !paused) {
                     pacman.setDirection(dx, dy);
                 }
             }
         });
     }
 
-    private void movePacman() {
+    private void bindPause(String key, String name) {
+        getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(key), name);
+
+        getActionMap().put(name, new AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                togglePause();
+            }
+        });
+    }
+
+    private void togglePause() {
         if (gameOver || pacmanBlinking) return;
+
+        paused = !paused;
+
+        if (paused) {
+            stopTimers();
+        } else {
+            pacmanTimer.start();
+            mouthTimer.start();
+            ghostManager.start();
+        }
+
+        repaint();
+    }
+
+    private void movePacman() {
+        if (gameOver || pacmanBlinking || paused) return;
 
         if (pacman.move(maze)) {
             score += 10;
@@ -90,7 +123,7 @@ public class GamePanel extends JPanel {
         if (!maze.hasDotsLeft()) {
             gameOver = true;
             stopTimers();
-            JOptionPane.showMessageDialog(this, "YOU WIN!");
+            JOptionPane.showMessageDialog(this, "YOU WIN!\nFinal Score: " + score);
             closeGame();
             return;
         }
@@ -99,7 +132,7 @@ public class GamePanel extends JPanel {
     }
 
     private void checkCollision() {
-        if (gameOver || pacmanBlinking || ghostManager == null) return;
+        if (gameOver || pacmanBlinking || paused || ghostManager == null) return;
 
         Ghost blinky = ghostManager.getBlinky();
         Ghost pinky = ghostManager.getPinky();
@@ -121,7 +154,8 @@ public class GamePanel extends JPanel {
             gameOver = true;
             pacmanVisible = true;
             repaint();
-            JOptionPane.showMessageDialog(this, "GAME OVER!");
+            // Displays final score along with GAME OVER
+            JOptionPane.showMessageDialog(this, "GAME OVER!\nFinal Score: " + score);
             closeGame();
             return;
         }
@@ -151,7 +185,7 @@ public class GamePanel extends JPanel {
                     this, "You were caught! Lives left: " + lives
             );
 
-            if (!gameOver) {
+            if (!gameOver && !paused) {
                 mouthTimer.start();
                 pacmanTimer.start();
                 ghostManager.start();
@@ -192,6 +226,6 @@ public class GamePanel extends JPanel {
                 ghostManager.getPinky(),
                 ghostManager.getInky(),
                 ghostManager.getClyde(),
-                score, lives, mouthOpen, pacmanVisible);
+                score, lives, mouthOpen, pacmanVisible, paused);
     }
 }
